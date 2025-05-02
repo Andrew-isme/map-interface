@@ -1,10 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Leaflet Map</title>
+  <title>Searchable Leaflet Map</title>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+
   <style>
     #map { height: 100vh; width: 100%; }
     body, html { margin: 0; padding: 0; }
@@ -13,15 +17,24 @@
 <body>
   <div id="map"></div>
 
+  <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <!-- Geocoder plugin -->
+  <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+
   <script>
-    const map = L.map('map').setView([20.5937, 78.9629], 5); // India
+    // Create the map centered on India
+    const map = L.map('map').setView([20.5937, 78.9629], 5);
+
+    // Add OpenStreetMap tile layer
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
-    L.marker([20.5937, 78.9629]).addTo(map)
-      .bindPopup('Center of India')
-      .openPopup();
+
+    // Add search (geocoder) control
+    L.Control.geocoder({
+      defaultMarkGeocode: true
+    }).addTo(map);
   </script>
 </body>
 </html>
