@@ -13,6 +13,26 @@
   <style>
     #map { height: 100vh; width: 100%; }
     body, html { margin: 0; padding: 0; }
+    .leaflet-control-air-quality {
+      background: #ff3333;
+      color: white;
+      padding: 5px;
+      font-weight: bold;
+    }
+    .leaflet-bar a {
+      display: block;
+      width: 26px;
+      height: 26px;
+      line-height: 26px;
+      text-align: center;
+      text-decoration: none;
+      color: black;
+      background: white;
+      border-bottom: 1px solid #888;
+    }
+    .leaflet-bar a:hover {
+      background: #f4f4f4;
+    }
   </style>
 </head>
 <body>
@@ -24,12 +44,12 @@
   <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.min.js"></script>
 
   <script>
-    // Init map centered on India
-    const map = L.map('map').setView([20.5937, 78.9629], 5);
+    // Init map centered on Delhi
+    const map = L.map('map').setView([28.6358, 77.2245], 12); // Delhi coordinates, zoomed in
 
     // Add OpenStreetMap tiles
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap contributors'
+      attribution: '© OpenStreetMap contributors'
     }).addTo(map);
 
     // Add search box
@@ -37,11 +57,11 @@
       defaultMarkGeocode: true
     }).addTo(map);
 
-    // Add current location button
+    // Add current location button (styled as a person icon)
     const locateBtn = L.control({position: 'topright'});
     locateBtn.onAdd = function(map) {
       const div = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
-      div.innerHTML = '<a href="#" title="Show My Location" style="padding: 4px;">📍</a>';
+      div.innerHTML = '<a href="#" title="Show My Location">👤</a>';
       div.onclick = function() {
         map.locate({setView: true, maxZoom: 14});
       };
@@ -63,11 +83,44 @@
     // Add directions (routing)
     L.Routing.control({
       waypoints: [
-        L.latLng(28.6139, 77.2090),  // Delhi
-        L.latLng(19.0760, 72.8777)   // Mumbai
+        L.latLng(28.6358, 77.2245),  // Delhi (center)
+        L.latLng(28.5355, 77.3910)   // Gurgaon (nearby for a more relevant example)
       ],
       routeWhileDragging: true
     }).addTo(map);
+
+    // Custom red "+" marker icon
+    const customIcon = L.divIcon({
+      className: 'custom-icon',
+      html: '<span style="color: red; font-size: 20px;">+</span>',
+      iconSize: [20, 20],
+      iconAnchor: [10, 10]
+    });
+
+    // Add markers (example coordinates around Delhi, similar to screenshot)
+    const locations = [
+      [28.7041, 77.1025], // Buddha Colony
+      [28.6692, 77.2119], // Near Tilak Nagar
+      [28.6304, 77.2177], // Near Amar Mahal
+      [28.6129, 77.2295], // Near Chheda Nagar
+      [28.5847, 77.3150], // Near Chembur
+      [28.5578, 77.2080], // Near Hubtown Seasons
+      [28.5355, 77.3910], // Near New Gautam Nagar
+      [28.6189, 77.2946]  // Near Adarsh Nagar
+    ];
+
+    locations.forEach(loc => {
+      L.marker(loc, { icon: customIcon }).addTo(map);
+    });
+
+    // Add air quality label
+    const airQuality = L.control({position: 'bottomleft'});
+    airQuality.onAdd = function(map) {
+      const div = L.DomUtil.create('div', 'leaflet-control-air-quality');
+      div.innerHTML = 'Air: Very Poor';
+      return div;
+    };
+    airQuality.addTo(map);
   </script>
 </body>
 </html>
