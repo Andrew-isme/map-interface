@@ -36,10 +36,7 @@
 <script src="https://unpkg.com/@geoapify/leaflet-routing-machine@1.2.0/dist/geoapify-routing-machine.min.js"></script>
 
 <script>
-const apiKey = "6e4d6234b8f64dbeb61c01a4b39b6879"
-GET
-API URL example
-https://api.geoapify.com/v1/routing?waypoints=50.96209827745463%2C4.414458883409225%7C50.429137079078345%2C5.00088081232559&mode=drive&apiKey=6e4d6234b8f64dbeb61c01a4b39b6879
+const apiKey = "6e4d6234b8f64dbeb61c01a4b39b6879";
 
 const map = L.map('map').setView([20.5937, 78.9629], 5);
 
@@ -49,17 +46,19 @@ L.tileLayer(`https://maps.geoapify.com/v1/tile/osm-carto/{z}/{x}/{y}.png?apiKey=
   maxZoom: 20
 }).addTo(map);
 
-// Routing Example (Delhi to Mumbai)
-L.Routing.control({
-  waypoints: [
-    L.latLng(28.6139, 77.2090),
-    L.latLng(19.0760, 72.8777)
-  ],
-  router: L.Routing.geoapify({ apiKey }),
-  routeWhileDragging: true
-}).addTo(map);
+let userLocation = null;
 
-// Autocomplete Search
+// User location detection
+map.locate({ setView: true, maxZoom: 12 });
+map.on('locationfound', (e) => {
+  userLocation = e.latlng;
+  L.marker(userLocation).addTo(map).bindPopup("📍 You are here").openPopup();
+});
+map.on('locationerror', () => {
+  alert("Location access denied or unavailable.");
+});
+
+// Live routing from user location to searched place
 const input = document.getElementById("autocomplete");
 input.addEventListener("input", async () => {
   const query = input.value;
@@ -71,6 +70,17 @@ input.addEventListener("input", async () => {
     const [lon, lat] = result.geometry.coordinates;
     map.setView([lat, lon], 14);
     L.marker([lat, lon]).addTo(map).bindPopup(result.properties.formatted).openPopup();
+
+    if (userLocation) {
+      L.Routing.control({
+        waypoints: [
+          L.latLng(userLocation.lat, userLocation.lng),
+          L.latLng(lat, lon)
+        ],
+        router: L.Routing.geoapify({ apiKey }),
+        routeWhileDragging: false
+      }).addTo(map);
+    }
   }
 });
 
@@ -103,6 +113,17 @@ fetch(`https://api.geoapify.com/v1/elevation?lat=28.6129&lon=77.2295&apiKey=${ap
       .setContent(`<div class='info-box'>Elevation: ${elevation.toFixed(2)} meters</div>`)
       .openOn(map);
   });
+
+// Reverse Geocoding on map click
+map.on('click', async (e) => {
+  const { lat, lng } = e.latlng;
+  const res = await fetch(`https://api.geoapify.com/v1/geocode/reverse?lat=${lat}&lon=${lng}&apiKey=${apiKey}`);
+  const data = await res.json();
+  if (data.features.length > 0) {
+    const address = data.features[0].properties.formatted;
+    L.popup().setLatLng([lat, lng]).setContent(`📍 ${address}`).openOn(map);
+  }
+});
 </script>
 </body>
 </html>
