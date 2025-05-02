@@ -1,32 +1,30 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Searchable Map</title>
+  <title>Map with Search, Location, Directions</title>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
 
   <style>
     #map { height: 100vh; width: 100%; }
     body, html { margin: 0; padding: 0; }
-    .leaflet-control-geocoder-form input {
-      width: 200px;
-    }
   </style>
 </head>
 <body>
   <div id="map"></div>
 
-  <!-- Leaflet JS -->
+  <!-- Libraries -->
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <!-- Geocoder plugin (search bar) -->
   <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+  <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.min.js"></script>
 
   <script>
-    // Create the map centered on India
+    // Init map centered on India
     const map = L.map('map').setView([20.5937, 78.9629], 5);
 
     // Add OpenStreetMap tiles
@@ -34,21 +32,42 @@
       attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
-    // Add search bar to the map
-    const geocoder = L.Control.geocoder({
+    // Add search box
+    L.Control.geocoder({
       defaultMarkGeocode: true
-    })
-    .on('markgeocode', function(e) {
-      const bbox = e.geocode.bbox;
-      const poly = L.polygon([
-        bbox.getSouthEast(),
-        bbox.getNorthEast(),
-        bbox.getNorthWest(),
-        bbox.getSouthWest()
-      ]).addTo(map);
-      map.fitBounds(poly.getBounds());
-    })
-    .addTo(map);
+    }).addTo(map);
+
+    // Add current location button
+    const locateBtn = L.control({position: 'topright'});
+    locateBtn.onAdd = function(map) {
+      const div = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+      div.innerHTML = '<a href="#" title="Show My Location" style="padding: 4px;">📍</a>';
+      div.onclick = function() {
+        map.locate({setView: true, maxZoom: 14});
+      };
+      return div;
+    };
+    locateBtn.addTo(map);
+
+    // Add marker when location is found
+    map.on('locationfound', function(e) {
+      L.marker(e.latlng).addTo(map)
+        .bindPopup("You are here").openPopup();
+    });
+
+    // Handle location error
+    map.on('locationerror', function(e) {
+      alert("Could not get your location.");
+    });
+
+    // Add directions (routing)
+    L.Routing.control({
+      waypoints: [
+        L.latLng(28.6139, 77.2090),  // Delhi
+        L.latLng(19.0760, 72.8777)   // Mumbai
+      ],
+      routeWhileDragging: true
+    }).addTo(map);
   </script>
 </body>
 </html>
