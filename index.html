@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Searchable Leaflet Map</title>
+  <title>Searchable Map</title>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -12,6 +12,9 @@
   <style>
     #map { height: 100vh; width: 100%; }
     body, html { margin: 0; padding: 0; }
+    .leaflet-control-geocoder-form input {
+      width: 200px;
+    }
   </style>
 </head>
 <body>
@@ -19,22 +22,33 @@
 
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <!-- Geocoder plugin -->
+  <!-- Geocoder plugin (search bar) -->
   <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
   <script>
     // Create the map centered on India
     const map = L.map('map').setView([20.5937, 78.9629], 5);
 
-    // Add OpenStreetMap tile layer
+    // Add OpenStreetMap tiles
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
-    // Add search (geocoder) control
-    L.Control.geocoder({
+    // Add search bar to the map
+    const geocoder = L.Control.geocoder({
       defaultMarkGeocode: true
-    }).addTo(map);
+    })
+    .on('markgeocode', function(e) {
+      const bbox = e.geocode.bbox;
+      const poly = L.polygon([
+        bbox.getSouthEast(),
+        bbox.getNorthEast(),
+        bbox.getNorthWest(),
+        bbox.getSouthWest()
+      ]).addTo(map);
+      map.fitBounds(poly.getBounds());
+    })
+    .addTo(map);
   </script>
 </body>
 </html>
